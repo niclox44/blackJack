@@ -30,14 +30,12 @@ int main(int argc, char const *argv[])
 	{
 		perror ("Error de conexión");
 		exit(1);
+
 	}
 
+	printf("Conectado al servidor.\n");
 
-    FD_ZERO(&auxFds);
-    FD_ZERO(&readFds);
-    
-    FD_SET(0,&readFds);
-    FD_SET(socketDescriptor,&readFds);
+
 
     return 0;
 }

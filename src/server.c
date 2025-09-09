@@ -6,14 +6,17 @@ int main(int argc, char const *argv[])
 {
 
     int socketDescriptor, newSocketDescriptor, maxSocketDesccriptor, activity;
+
     struct sockaddr_in sockName, from;
-    char buffer[BUFFER_SIZE];
-    fd_set readfds;
+
     socklen_t fromLength = sizeof(from);
 
-    socketDescriptor = socket(AF_INET, SOCK_STREAM,0);
+    char buffer[BUFFER_SIZE];
 
-    if(socketDescriptor == 1)
+    fd_set readfds;
+
+    socketDescriptor = socket(AF_INET, SOCK_STREAM,0);
+    if(socketDescriptor == -1)
     {
         perror("FAILED SERVER. Open socket error.");
         exit(EXIT_FAILURE);
@@ -29,20 +32,24 @@ int main(int argc, char const *argv[])
         exit(EXIT_FAILURE);
     }
 
-    if (listen(socketDescriptor, 3) == -1) {
+    if (listen(socketDescriptor, 1) == -1) {
         perror("Error en la operación de listen");
         exit(1);
     }
 
-    printf("Servidor escuchando en el puerto 2060...\n");
+    
 
-    while(1){
-        // Limpiar el conjunto de descriptores
-        FD_ZERO(&readfds);
+    printf("Servidor escuchando en el puerto %d...\n", htons(sockName.sin_port));
 
-        // Añadir el socket maestro al conjunto
-        FD_SET(socketDescriptor, &readfds);
-        maxSocketDesccriptor = socketDescriptor;
+    while(1) {
+        
+        if((newSocketDescriptor = accept(socketDescriptor, (struct sockaddr*) &from, &fromLength)) == -1){
+
+            perror("FAILED SERVER. Function accept().");
+            exit(EXIT_FAILURE);
+        }
+
+        printf("Cliente conectado desde %s:%d", inet_ntoa(from.sin_addr), htons(from.sin_port));
     }
 
     return 0;

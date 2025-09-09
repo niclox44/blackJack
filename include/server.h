@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <time.h>
 #include <arpa/inet.h>
+#include <sys/select.h>
 
 #define MAX_CLIENTS 30
 #define BUFFER_SIZE 250
