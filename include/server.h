@@ -9,15 +9,9 @@
 #include <time.h>
 #include <arpa/inet.h>
 #include <sys/select.h>
+#include <states.h>
+#include <signal.h>
 
-#define MAX_CLIENTS 30
-#define BUFFER_SIZE 250
-
-#define NOT_AUTHENTICATED 0
-#define AUTHENTICATED 1
-#define WAITING_FOR_GAME 2
-#define IN_GAME 3
-#define STAND 4
 
 typedef struct {
     int socket;
@@ -29,6 +23,7 @@ typedef struct {
 } Player;
 
 void setClientSocket();
+void handle_signinit(int sig);
 int findUser(char* name);
 int checkPassword(char* name, char* password);
 int extractSubstring(char* string, char* name, char* password);

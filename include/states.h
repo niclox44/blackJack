@@ -1,0 +1,9 @@
+#define EXIT 0
+#define MAX_CLIENTS 30
+#define BUFFER_SIZE 250
+
+#define NOT_AUTHENTICATED 0
+#define AUTHENTICATED 1
+#define WAITING_FOR_GAME 2
+#define IN_GAME 3
+#define STAND 4
