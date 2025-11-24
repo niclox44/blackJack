@@ -33,15 +33,18 @@ int main(int argc, char const *argv[])
 		exit(1);
 
 	}
-
-	printf("Conectado al servidor.\n");
+	
+	printf("+Ok. Usuario conectado.\n");
 
 	do{
 
-		
-		puts("Teclee el mensaje que desea enviar.");
+		puts("OPCIONES:");
+		puts("------------");
+		puts("0.SALIR.");
+		puts("1. Inicio de sesion (USUARIO <su_usuario>)");
+
 		fgets(buffer,sizeof(buffer),stdin);
-		buffer[strlen(buffer)-1] = '\0';
+		clearStr(buffer);
 
 		if(!strcmp(buffer,"SALIR")){
 
