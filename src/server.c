@@ -15,6 +15,8 @@ int main(int argc, char const *argv[])
     //setfds: copia temporal para pasar a select
     //master: conjunto de todos los sockets activos
 
+    Player playersVector[MAX_CLIENTS];
+
     int newSocketDescriptor, maxFds;
 
     masterSocket = socket(AF_INET, SOCK_STREAM,0);
@@ -72,7 +74,7 @@ int main(int argc, char const *argv[])
             
             addrLength = sizeof(clientAddr);
             newSocketDescriptor = accept(masterSocket, (struct sockaddr* )&clientAddr, &addrLength);
-
+            
             if(newSocketDescriptor < 0){
 
                 perror("-Err. Server error. Select() function.\n");
@@ -97,7 +99,7 @@ int main(int argc, char const *argv[])
 
             if(FD_ISSET(sd, &setfds)){
 
-                int recive = recv(sd, buffer, BUFFER_SIZE-1, 0);
+                int recive = recv(sd, buffer, sizeof(buffer), 0);
 
                 if( recive <= 0){
 
@@ -109,11 +111,15 @@ int main(int argc, char const *argv[])
 
                 }else{
 
-                    buffer[recive] = '\0';
-
+                    clearStr(buffer);
                     printf("+Cliente %d: %s\n", sd, buffer);
 
-                    char confirmation[] = "Mensaje recibido";
+                    char confirmation[] = "Mensaje recibido\n";
+                    if(strcmp(buffer, "SALIR") == 0){
+                        printf("El cliente %d ha solicitado salir.\n", sd);
+                        close(sd);
+                        FD_CLR(sd, &master);
+                    }
 
                     send(sd, confirmation, sizeof(confirmation), 0);
                 }

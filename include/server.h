@@ -1,21 +1,6 @@
 #include <server_client.h>
 #include <signal.h>
 
-#define MAX_CLIENTS 30
-#define MAX_LENTGH_USER 16
-#define MAX_LENTGH_PASSWORD 20
-
-typedef struct {
-    int socket;
-    char name[100];
-    int state;
-    int points;
-    int cards[5][5]; 
-    int card_count;
-} Player;
-
-
-
 
 
 void handle_signinit(int sig);

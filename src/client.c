@@ -2,12 +2,13 @@
 
 int main(int argc, char const *argv[])
 {
-    int socketDescriptor;
+    int socketDescriptor, serverValue;
 	struct sockaddr_in socketName;
 	char buffer[250];
 	socklen_t socketNameLength;
     fd_set readFds, auxFds;
-    int status = !EXIT;
+    int status = 1, salida = 0;
+	
 
 
     socketDescriptor = socket (AF_INET, SOCK_STREAM, 0);
@@ -33,45 +34,75 @@ int main(int argc, char const *argv[])
 		exit(1);
 
 	}
+
+	FD_ZERO(&auxFds);
+    FD_ZERO(&readFds);
+    
+    FD_SET(0,&readFds);
+    FD_SET(socketDescriptor,&readFds);
 	
 	printf("+Ok. Usuario conectado.\n");
 
 	do{
+		printf("=========\n");
+		printf("OPCIONES\n");
+		printf("=========\n");
+		printf("- Salir-> 'SALIR'.\n");
+		printf("- Iniciar sesión.\n");
+		printf("\n");
 
-		puts("OPCIONES:");
-		puts("------------");
-		puts("0.SALIR.");
-		puts("1. Inicio de sesion (USUARIO <su_usuario>)");
+		auxFds = readFds;
+    	salida = select(socketDescriptor+1,&auxFds,NULL,NULL,NULL);
 
-		fgets(buffer,sizeof(buffer),stdin);
-		clearStr(buffer);
+		if(salida < 0) status = EXIT;
+		
+		/*Check if there is data to read from the server*/
+		if(FD_ISSET(socketDescriptor, &auxFds)){
 
-		if(!strcmp(buffer,"SALIR")){
+			bzero(buffer, sizeof(buffer));
 
-			status = EXIT;
+			serverValue = recv(socketDescriptor,buffer,sizeof(buffer),0);
+			
+			if(serverValue == -1){
+
+				perror("CLIENT ERROR. Function recv().");
+				exit(EXIT_FAILURE);
+
+			}else{
+
+				clearStr(buffer);
+				printf("Respuesta del servidor: %s\n",buffer);
+
+			}
+
+		}else{
+
+			/*Read the command*/
+			if(FD_ISSET(0, &auxFds)){
+
+
+				bzero(buffer, sizeof(buffer));
+				fgets(buffer,sizeof(buffer),stdin);
+				clearStr(buffer);
+
+				if(strcmp(buffer,"SALIR") == 0){
+
+					status = EXIT;
+
+				}
+
+				if((send(socketDescriptor, buffer, sizeof(buffer),0) == -1)){
+
+					perror("CLIENT ERROR. Function send().");
+					exit(EXIT_FAILURE);
+				}
+
+			}
+
 		}
 
-		/*GOING to SEND the message from the SERVER*/
 
-		if(send(socketDescriptor, buffer, sizeof(buffer),0) == -1){
-			perror("CLIENT ERROR. Function send().");
-			exit(EXIT_FAILURE);
-		}
-
-		/*GOING to RECIVE the message from the SERVER*/
-
-		bzero(buffer, sizeof(buffer));
-
-		if(recv(socketDescriptor,buffer,sizeof(buffer),0) == -1){
-			perror("CLIENT ERROR. Function recv().");
-			exit(EXIT_FAILURE);
-		}
-
-		printf("Respuesta del servidor: %s\n",buffer);
-
-
-
-	}while( status != EXIT );
+	}while( status != EXIT);
 
 	close(socketDescriptor);
 
