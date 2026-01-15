@@ -20,6 +20,7 @@
 #define IN_GAME 3
 #define STAND 4
 
+
 typedef struct {
     int socket;
     char name[100];
@@ -35,4 +36,12 @@ void clearStr(char *buffer) {
     if (len > 0 && buffer[len - 1] == '\n') {
         buffer[len - 1] = '\0';
     }
+}
+
+char* extractCommand(char* input) {
+
+    char* aux = input;
+    char* command = strtok(aux, " ");
+    return command;
+
 }

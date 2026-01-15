@@ -114,14 +114,21 @@ int main(int argc, char const *argv[])
                     clearStr(buffer);
                     printf("+Cliente %d: %s\n", sd, buffer);
 
-                    char confirmation[] = "Mensaje recibido\n";
                     if(strcmp(buffer, "SALIR") == 0){
+
                         printf("El cliente %d ha solicitado salir.\n", sd);
                         close(sd);
                         FD_CLR(sd, &master);
+                        
                     }
 
+                    /* 
+                    ---->ESTO ES SOLO PARA PROBAR QUE RECIBE EL SERVIDOR<----
+
+                    char confirmation[] = "Mensaje recibido\n";
+                    char confirmation[] = "Mensaje recibido\n";
                     send(sd, confirmation, sizeof(confirmation), 0);
+                    */
                 }
             }
 

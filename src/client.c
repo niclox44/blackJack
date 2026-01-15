@@ -8,7 +8,7 @@ int main(int argc, char const *argv[])
 	socklen_t socketNameLength;
     fd_set readFds, auxFds;
     int status = 1, salida = 0;
-	
+	char* command;
 
 
     socketDescriptor = socket (AF_INET, SOCK_STREAM, 0);
@@ -48,14 +48,16 @@ int main(int argc, char const *argv[])
 		printf("OPCIONES\n");
 		printf("=========\n");
 		printf("- Salir-> 'SALIR'.\n");
-		printf("- Iniciar sesión.\n");
+		printf("- Iniciar sesión ->\n");
+		printf("  'USUARIO <nombre_usuario>'\n");
+		printf("  'PASSWORD <contraseña>'\n");
+		printf("- Registrarse -> 'REGISTRO -u <nombre_usuario> -p <contraseña>'\n");
 		printf("\n");
 
 		auxFds = readFds;
     	salida = select(socketDescriptor+1,&auxFds,NULL,NULL,NULL);
-
 		if(salida < 0) status = EXIT;
-		
+
 		/*Check if there is data to read from the server*/
 		if(FD_ISSET(socketDescriptor, &auxFds)){
 
@@ -68,11 +70,15 @@ int main(int argc, char const *argv[])
 				perror("CLIENT ERROR. Function recv().");
 				exit(EXIT_FAILURE);
 
+			}else if (serverValue == 0){
+
+				printf("-SERVER ERROR. Server has been disconnected.\n");
+				status = EXIT;
+
 			}else{
 
 				clearStr(buffer);
 				printf("Respuesta del servidor: %s\n",buffer);
-
 			}
 
 		}else{
@@ -84,12 +90,7 @@ int main(int argc, char const *argv[])
 				bzero(buffer, sizeof(buffer));
 				fgets(buffer,sizeof(buffer),stdin);
 				clearStr(buffer);
-
-				if(strcmp(buffer,"SALIR") == 0){
-
-					status = EXIT;
-
-				}
+				command = extractCommand(buffer);
 
 				if((send(socketDescriptor, buffer, sizeof(buffer),0) == -1)){
 
@@ -97,10 +98,28 @@ int main(int argc, char const *argv[])
 					exit(EXIT_FAILURE);
 				}
 
+				if(strcmp(command,"SALIR") == 0){
+
+					printf("Comando para salir.\n");
+					status = EXIT;
+
+				}else if(strcmp(command,"USUARIO") == 0){
+
+					printf("Comando para iniciar sesión.\n");
+
+				}else if(strcmp(command,"PASSWORD") == 0){
+
+					printf("Comando para enviar la contraseña.\n");
+
+				}else if(strcmp(command,"REGISTRO") == 0){
+					printf("Comando para registrarse.\n");
+				}
+				
+
 			}
+				
 
 		}
-
 
 	}while( status != EXIT);
 
