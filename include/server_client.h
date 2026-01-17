@@ -30,6 +30,11 @@ typedef struct {
     int card_count;
 } Player;
 
+
+void clearStr(char *buffer);
+char* extractCommand(char* input);
+
+
 void clearStr(char *buffer) {
     size_t len = strlen(buffer);
 

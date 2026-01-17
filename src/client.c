@@ -8,7 +8,6 @@ int main(int argc, char const *argv[])
 	socklen_t socketNameLength;
     fd_set readFds, auxFds;
     int status = 1, salida = 0;
-	char* command;
 
 
     socketDescriptor = socket (AF_INET, SOCK_STREAM, 0);
@@ -90,7 +89,9 @@ int main(int argc, char const *argv[])
 				bzero(buffer, sizeof(buffer));
 				fgets(buffer,sizeof(buffer),stdin);
 				clearStr(buffer);
-				command = extractCommand(buffer);
+
+
+				printf("Buffer: %s\n", buffer);
 
 				if((send(socketDescriptor, buffer, sizeof(buffer),0) == -1)){
 
@@ -98,23 +99,12 @@ int main(int argc, char const *argv[])
 					exit(EXIT_FAILURE);
 				}
 
-				if(strcmp(command,"SALIR") == 0){
+				if(strcmp(buffer,"SALIR") == 0){
 
 					printf("Comando para salir.\n");
 					status = EXIT;
 
-				}else if(strcmp(command,"USUARIO") == 0){
-
-					printf("Comando para iniciar sesión.\n");
-
-				}else if(strcmp(command,"PASSWORD") == 0){
-
-					printf("Comando para enviar la contraseña.\n");
-
-				}else if(strcmp(command,"REGISTRO") == 0){
-					printf("Comando para registrarse.\n");
 				}
-				
 
 			}
 				

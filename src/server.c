@@ -111,16 +111,88 @@ int main(int argc, char const *argv[])
 
                 }else{
 
-                    clearStr(buffer);
+    
                     printf("+Cliente %d: %s\n", sd, buffer);
+                    
+                    char* util = NULL;
+                    char* command = strtok_r(buffer, " ", &util);
 
-                    if(strcmp(buffer, "SALIR") == 0){
+                    if(strcmp(command, "SALIR") == 0){
 
                         printf("El cliente %d ha solicitado salir.\n", sd);
                         close(sd);
                         FD_CLR(sd, &master);
                         
+                    }else if(strcmp(command, "USUARIO") == 0){
+
+                        char* user = strtok(NULL, " ");
+
+                        if(existsUser(user) == 1){
+
+                            char response[] = "Usuario existe. Enviar: \"PASSWORD <contraseña>\".\n";
+                            send(sd, response, sizeof(response), 0);
+
+                        }else{
+
+                            char response[] = "ERROR. Usuario no existe.\n";
+                            send(sd, response, sizeof(response), 0);
+
+                        }
+
+                    
+
+                    }else if(strcmp(command, "PASSWORD") == 0){
+
+                        char* password = strtok(NULL, " ");
+                        char* user = strtok(NULL, " ");
+
+                        if(isUserAuthenticated(user, password) == 1){
+
+                            char response[] = "Usuario autenticado correctamente.\n";
+                            send(sd, response, sizeof(response), 0);
+
+                        }else{
+
+                            char response[] = "ERROR. Contraseña incorrecta.\n";
+                            send(sd, response, sizeof(response), 0);
+
+                        }
+
+                    } else if (strcmp(command, "REGISTRO") == 0) {
+
+                        char *u = strtok_r(NULL, " ", &util);
+                        printf("Debug: u = %s\n", u);
+                        char *user = strtok_r(NULL, " ", &util);
+                        char *p = strtok_r(NULL, " ", &util);
+                        printf("Debug: p = %s\n", p);
+                        char *password = strtok_r(NULL, " ", &util);
+
+                        if (!u || !user || !p || !password) {
+                            char response[] = "ERROR. Formato incorrecto. Use: REGISTRO -u <usuario> -p <contraseña>\n";
+                            send(sd, response, sizeof(response), 0);
+                            continue;
+                        }
+                    
+                        if (strcmp(u, "-u") != 0 || strcmp(p, "-p") != 0) {
+                            char response[] = "ERROR. Formato incorrecto. Use: REGISTRO -u <usuario> -p <contraseña>\n";
+                            send(sd, response, sizeof(response), 0);
+                            continue;
+                        }
+
+                        if (existsUser(user) == 0) {
+                            if (registerUser(user, password) == 0) {
+                                char response[] = "Usuario registrado correctamente.\n";
+                                send(sd, response, sizeof(response), 0);
+                            } else {
+                                char response[] = "ERROR. No se pudo registrar el usuario.\n";
+                                send(sd, response, sizeof(response), 0);
+                            }
+                        } else {
+                            char response[] = "ERROR. El usuario ya existe.\n";
+                            send(sd, response, sizeof(response), 0);
+                        }
                     }
+
 
                     /* 
                     ---->ESTO ES SOLO PARA PROBAR QUE RECIBE EL SERVIDOR<----
@@ -135,8 +207,9 @@ int main(int argc, char const *argv[])
         }
 
             
-        }
-        close(masterSocket);
+    }
+    close(masterSocket);
 
     return 0;
 }
+

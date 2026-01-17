@@ -1,102 +1,88 @@
 #include <server_client.h>
 #include <signal.h>
 
+int existsUser(const char* username); // 0: does not exist, 1: exists, -1: error
+int isUserAuthenticated(const char* username, const char* password); // 0: not authenticated, 1: authenticatedç
+int registerUser(const char* username, const char* password); // 0: success, -1: error
 
 
-void handle_signinit(int sig);
-int logIn(char* user, char* password);
-//user+pw is correct == 0 / user not correct = -1 / password not correct = 0
+int registerUser(const char* username, const char* password)
+{
+    FILE* file = fopen("/home/nicolas/Escritorio/blackjack/data/users.txt", "a");
 
+    if (file == NULL) {
+        perror("Error opening users file");
+        return -1;
 
-int userExists(char* user); //Exists == 0 / Not exists = 1
-int checkPassword(char* user, char* password); //Exists == 0 / Not exists = 1
-char* getOptionFromMsg(char* message);
+    }
 
+    fprintf(file, "%s %s\n", username, password);
+    fclose(file);
+    return 0; // Success
 
-/*
-int userExists(char* user){
-    FILE* users;
-    char userCmp[MAX_LENTGH_USER];
-    int exists = 0;
+}
 
-    users = fopen("./data/users.txt", "r");
+int existsUser(const char* username)
+{
+    FILE* file = fopen("/home/nicolas/Escritorio/blackjack/data/users.txt", "r");
 
-    while(fgets(userCmp,sizeof(userCmp),users) != NULL){
+    if (file == NULL) {
+        perror("Error opening users file");
+        return -1;
 
-        clearStr(userCmp);
+    }
 
-        if(!strcmp(userCmp, user))
-        {
-            exists = 1;
-            break;
+    char line[256];
+
+    while(fgets(line, sizeof(line), file)){
+
+        char file_username[100];
+        sscanf(line, "%s", file_username);
+
+        if(strcmp(username, file_username) == 0){
+
+            fclose(file);
+            return 1; // User exists
 
         }
 
-        fgets(userCmp,sizeof(userCmp),users); //jump the password's line
-            
-        
+    }
+
+    fclose(file);
+    return 0; // User does not exist
+
+}
+
+
+
+int isUserAuthenticated(const char* username, const char* password)
+{
+    FILE* file = fopen("data/users.txt", "r");
+
+    if (file == NULL) {
+        perror("Error opening users file");
+        return -1;
 
     }
 
-    fclose(users);
+    char line[256];
 
-    return exists;
-};
+    while(fgets(line, sizeof(line), file)){
 
-int checkPassword(char* user, char* password){
+        char file_username[100];
+        char file_password[100];
 
-    FILE* passwords;
-    char passwordCmp[MAX_LENTGH_PASSWORD];
-    int exists = 0;
-    int state = 0;
-    
-    passwords = fopen("./data/users.txt", "r");
+        sscanf(line, "%s %s", file_username, file_password);
 
+        if(strcmp(username, file_username) == 0 && strcmp(password, file_password) == 0){
 
-    if(fgets(passwordCmp,sizeof(passwordCmp),passwords) == NULL){
-
-        return 0;
-
-    } //Jump the user's line
-
-
-    while(fgets(passwordCmp,sizeof(passwordCmp),passwords) != NULL){
-        
-        clearStr(passwordCmp);
-
-        if(!strcmp(passwordCmp,password)){
-
-            exists = 1;
-            break;
+            fclose(file);
+            return 1; // Authenticated
 
         }
 
-        if(fgets(passwordCmp,sizeof(passwordCmp),passwords) == NULL){
-
-            break;
-        } //jump the user's line
-
-        
     }
 
-    return exists;
+    return 0; // Not authenticated
 
-};
-
-int logIn(char* user, char* password){
-
-    if(!userExists(user)){
-
-        printf("-Err. Usuario <%s> incorrecto.\n",user);
-        return 1;
-
-    }else{
-        printf("+Ok. Uusario correcto.\n");
-
-
-    }
-};
-*/
-
-
-
+}
