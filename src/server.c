@@ -17,7 +17,7 @@ int main(int argc, char const *argv[])
 
     Player playersVector[MAX_CLIENTS];
 
-    int newSocketDescriptor, maxFds;
+    int newSocketDescriptor, maxFds, nClient = 0;
 
     masterSocket = socket(AF_INET, SOCK_STREAM,0);
     if(masterSocket == -1)
@@ -85,9 +85,18 @@ int main(int argc, char const *argv[])
                 printf("Cliente conectado desde %s:%d\n", inet_ntoa(clientAddr.sin_addr), htons(clientAddr.sin_port));
                 FD_SET(newSocketDescriptor, &master);
 
+                playersVector[nClient].socket = newSocketDescriptor;
+                playersVector[nClient].state = NOT_AUTHENTICATED;
+                playersVector[nClient].points = 0;
+                playersVector[nClient].card_count = 0;
+                playersVector[nClient].name[0] = '\0';
+
+                nClient++;
+
                 if(newSocketDescriptor > maxFds){
                     
                     maxFds = newSocketDescriptor;
+
                 }
             }
         }
@@ -103,7 +112,12 @@ int main(int argc, char const *argv[])
 
                 if( recive <= 0){
 
-                    if(recive == 0) printf("El cliente %d se ha desconectado\n", sd);
+                    if(recive == 0) {
+
+                        printf("El cliente %d se ha desconectado\n", sd);
+                        removePlayer(playersVector, &nClient, sd);
+
+                    }
                     else perror("-Err. Server error. Recv() function.\n");
 
                     close(sd);
@@ -120,77 +134,84 @@ int main(int argc, char const *argv[])
                     if(strcmp(command, "SALIR") == 0){
 
                         printf("El cliente %d ha solicitado salir.\n", sd);
+                        removePlayer(playersVector, &nClient, sd);
                         close(sd);
                         FD_CLR(sd, &master);
                         
-                    }else if(strcmp(command, "USUARIO") == 0){
-
-                        char* user = strtok(NULL, " ");
-
-                        if(existsUser(user) == 1){
-
-                            char response[] = "Usuario existe. Enviar: \"PASSWORD <contraseña>\".\n";
-                            send(sd, response, sizeof(response), 0);
-
-                        }else{
-
-                            char response[] = "ERROR. Usuario no existe.\n";
-                            send(sd, response, sizeof(response), 0);
-
-                        }
-
-                    
-
-                    }else if(strcmp(command, "PASSWORD") == 0){
-
-                        char* password = strtok(NULL, " ");
-                        char* user = strtok(NULL, " ");
-
-                        if(isUserAuthenticated(user, password) == 1){
-
-                            char response[] = "Usuario autenticado correctamente.\n";
-                            send(sd, response, sizeof(response), 0);
-
-                        }else{
-
-                            char response[] = "ERROR. Contraseña incorrecta.\n";
-                            send(sd, response, sizeof(response), 0);
-
-                        }
-
-                    } else if (strcmp(command, "REGISTRO") == 0) {
+                    }else if(strcmp(command, "INICIO") == 0){
 
                         char *u = strtok_r(NULL, " ", &util);
-                        printf("Debug: u = %s\n", u);
                         char *user = strtok_r(NULL, " ", &util);
                         char *p = strtok_r(NULL, " ", &util);
-                        printf("Debug: p = %s\n", p);
                         char *password = strtok_r(NULL, " ", &util);
 
-                        if (!u || !user || !p || !password) {
-                            char response[] = "ERROR. Formato incorrecto. Use: REGISTRO -u <usuario> -p <contraseña>\n";
+                        if(isFormattedCorrectly(command, u, p) == 0) { //Check format
+                            char response[] = "ERROR. Formato incorrecto. Use: INICIO -u <usuario> -p <contraseña>\n";
                             send(sd, response, sizeof(response), 0);
                             continue;
                         }
+
+                        if(isUserAuthenticated(user, password) == 1){
+
+                            
+                            char response[] = "Usuario autenticado correctamente.\n";
+                            for(int i=0; i<nClient; i++){
+
+                                if(playersVector[i].socket == sd){
+
+                                    strncpy(playersVector[i].name, user, sizeof(playersVector[i].name)-1);
+                                    playersVector[i].name[sizeof(playersVector[i].name)-1] = '\0';
+                                    break;
+
+                                }
+                            }       
+                            send(sd, response, sizeof(response), 0);
+
+                        }else{
+
+                            char response[] = "ERROR. Usuario o contraseña incorrectos.\n";
+                            send(sd, response, sizeof(response), 0);
+
+                        }
+
                     
-                        if (strcmp(u, "-u") != 0 || strcmp(p, "-p") != 0) {
-                            char response[] = "ERROR. Formato incorrecto. Use: REGISTRO -u <usuario> -p <contraseña>\n";
+
+                    }else if (strcmp(command, "REGISTRO") == 0) {
+
+                        char *u = strtok_r(NULL, " ", &util);
+                        char *user = strtok_r(NULL, " ", &util);
+                        char *p = strtok_r(NULL, " ", &util);
+                        char *password = strtok_r(NULL, " ", &util);
+
+                        if(isFormattedCorrectly(command, u, p) == 0) { //Check format
+                            char response[] = "ERROR. Formato incorrecto. Use: Registro -u <usuario> -p <contraseña>\n";
                             send(sd, response, sizeof(response), 0);
                             continue;
                         }
 
                         if (existsUser(user) == 0) {
                             if (registerUser(user, password) == 0) {
+
                                 char response[] = "Usuario registrado correctamente.\n";
                                 send(sd, response, sizeof(response), 0);
+
                             } else {
+
                                 char response[] = "ERROR. No se pudo registrar el usuario.\n";
                                 send(sd, response, sizeof(response), 0);
+
                             }
                         } else {
+
                             char response[] = "ERROR. El usuario ya existe.\n";
                             send(sd, response, sizeof(response), 0);
+
                         }
+                    }else if(strcmp(command, "PLAY") == 0){
+
+                        char response[] = "Modo juego no implementado aún.\n";
+                        send(sd, response, sizeof(response), 0);
+
                     }
 
 

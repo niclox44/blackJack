@@ -4,7 +4,9 @@
 int existsUser(const char* username); // 0: does not exist, 1: exists, -1: error
 int isUserAuthenticated(const char* username, const char* password); // 0: not authenticated, 1: authenticatedç
 int registerUser(const char* username, const char* password); // 0: success, -1: error
-
+void removePlayer(Player* players, int* nClient, int socket);
+void authenticatePlayer(Player* players, int nClient, int socket);
+int isFormattedCorrectly(const char* command, const char* username, const char* password);
 
 int registerUser(const char* username, const char* password)
 {
@@ -86,3 +88,44 @@ int isUserAuthenticated(const char* username, const char* password)
     return 0; // Not authenticated
 
 }
+
+void removePlayer(Player* players, int* nClient, int socket){
+
+    for(int i=0; i<*nClient; i++){
+
+        if(players[i].socket == socket){
+            // Shift player to the left
+
+            for(int j=i; j<*nClient; j++){
+                players[j] = players[j+1];
+            }
+
+            (*nClient)--; // Decrease the number of clients
+            break;
+        }
+
+    }
+}
+
+void authenticatePlayer(Player* players, int nClient, int socket){
+    
+    for(int i=0; i<nClient; i++){
+
+        if(players[i].socket == socket){
+
+            players[i].state = AUTHENTICATED;
+            break;
+
+        }
+    }
+}
+
+int isFormattedCorrectly(const char* command, const char* username, const char* password) {
+
+    if (!username || !password || strcmp(username, "-u") != 0 || strcmp(password, "-p") != 0) {
+        return 0; // Incorrect format
+    }
+
+    return 1; // Correct format
+}
+
