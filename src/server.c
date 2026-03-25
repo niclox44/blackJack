@@ -17,7 +17,9 @@ int main(int argc, char const *argv[])
 
     Player playersVector[MAX_CLIENTS];
 
-    int newSocketDescriptor, maxFds, nClient = 0;
+    GameSession gameSessions[MAX_CLIENTS/2];
+
+    int newSocketDescriptor, maxFds, nClient = 0, nSession = 0;
 
     masterSocket = socket(AF_INET, SOCK_STREAM,0);
     if(masterSocket == -1)
@@ -120,6 +122,7 @@ int main(int argc, char const *argv[])
                     }
                     else perror("-Err. Server error. Recv() function.\n");
 
+                    // clearPlayers(playersVector, nClient);
                     close(sd);
                     FD_CLR(sd, &master);
 
@@ -127,14 +130,13 @@ int main(int argc, char const *argv[])
 
     
                     printf("+Cliente %d: %s\n", sd, buffer);
-                    
                     char* util = NULL;
                     char* command = strtok_r(buffer, " ", &util);
 
                     if(strcmp(command, "SALIR") == 0){
 
                         printf("El cliente %d ha solicitado salir.\n", sd);
-                        removePlayer(playersVector, &nClient, sd);
+                        // removePlayer(playersVector, &nClient, sd);
                         close(sd);
                         FD_CLR(sd, &master);
                         
@@ -209,24 +211,55 @@ int main(int argc, char const *argv[])
                         }
                     }else if(strcmp(command, "PLAY") == 0){
 
-                        char response[] = "Modo juego no implementado aún.\n";
+                        
+                        GameSession* session = NULL;
+                        int sessionId;
+                        
+                        if(isPlayerWaitingGame(playersVector) != -1){ //Hay un jugador esperando
+
+                                
+                                setPlayerGameState(playersVector, nClient, sd, IN_GAME); //Ponemos al jugador en estado de juego
+
+                                char response[] = "Otro jugador ya estaba esperando. Iniciando partida...\n";
+
+                                send(sd, response, sizeof(response), 0);
+                                
+                            
+                        }else{ //NO hay jugadores esperando, metemos a ese jugador en espera
+
+                            sessionId = nSession + 1; //ID de sesion basado en el numero de sesiones actuales
+                            gameSessions[nSession - 1].id = sessionId;
+                            nSession++;
+
+                            initializeGameSession(gameSessions[nSession - 1], playersVector[findCLientBySocket(playersVector, nClient, sd)]); //Inicializamos la sesion de juego con el jugador que esta esperando
+                            setPlayerGameState(playersVector, nClient, sd, WAITING_FOR_GAME); //Ponemos al jugador en estado de espera
+                            
+                            
+                            char response[] = "Esperando a otro jugador para iniciar la partida...\n";
+                            send(sd, response, sizeof(response), 0);
+
+                        }
+                        
+                    }else if(strcmp(command, "HIT") == 0){
+
+                        char response[] = "Has decidido pedir carta.\n";
                         send(sd, response, sizeof(response), 0);
 
+                    }else if (strcmp(command, "STAND") == 0)
+                    {
+
+                        char response[] = "Has decidido plantarte.\n";
+                        send(sd, response, sizeof(response), 0);
+
+                    
                     }
+                    
 
-
-                    /* 
-                    ---->ESTO ES SOLO PARA PROBAR QUE RECIBE EL SERVIDOR<----
-
-                    char confirmation[] = "Mensaje recibido\n";
-                    char confirmation[] = "Mensaje recibido\n";
-                    send(sd, confirmation, sizeof(confirmation), 0);
-                    */
                 }
+                        
             }
-
+            
         }
-
             
     }
     close(masterSocket);

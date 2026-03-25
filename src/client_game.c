@@ -8,16 +8,14 @@
 #include "server_client.h"
 #include "utils.h"
 
-static int send_line(int sd, const char *line) {
-    size_t n = strlen(line);
-    // Enviar solo lo necesario (NO sizeof(buffer))
-    return (int)send(sd, line, n, 0);
-}
+
 
 void gameLoop(int sd)
 {
     fd_set readFds, auxFds;
     char buffer[BUFFER_SIZE];
+
+    int status = WAITING_FOR_GAME;
 
     FD_ZERO(&readFds);
     FD_SET(0, &readFds);     // stdin
@@ -44,7 +42,7 @@ void gameLoop(int sd)
         // Mensaje del servidor
         if (FD_ISSET(sd, &auxFds)) {
 
-            memset(buffer, 0, sizeof(buffer));
+            bzero(buffer, sizeof(buffer));
             int n = (int)recv(sd, buffer, sizeof(buffer) - 1, 0);
 
             if (n <= 0) {
@@ -57,10 +55,17 @@ void gameLoop(int sd)
             clearStr(buffer);
 
             printf("[SERVER] %s\n", buffer);
+
+            if(strcmp(buffer, "START_GAME") == 0){
+
+                printf("[CLIENT]: Entrando al modo de juego solicitado anteriormente.\n");
+                continue;
+
+            }
         }
 
         // Entrada del usuario
-        if (FD_ISSET(0, &auxFds)) {
+        if (FD_ISSET(0, &auxFds)){
 
             bzero(buffer, sizeof(buffer));
 
@@ -70,17 +75,46 @@ void gameLoop(int sd)
 
             if (strcmp(buffer, "LEAVE") == 0) {
 
-                send_line(sd, "LEAVE\n");
+                if((send(sd, buffer, sizeof(buffer),0) == -1)){
+
+					perror("CLIENT ERROR. Function send().");
+					exit(EXIT_FAILURE);
+
+				}
                 printf("Saliendo del modo juego.\n");
+
                 return;
 
+            }else if(strcmp(buffer, "PLAY") == 0 && status != IN_GAME){
+
+                printf("[CLIENT]: Solicitando entrar/crear partida...\n");
+                if((send(sd, buffer, sizeof(buffer),0) == -1)){
+
+					perror("CLIENT ERROR. Function send().");
+					exit(EXIT_FAILURE);
+
+				}
+                status = IN_GAME;
+
             }
-            if((send(sd, buffer, sizeof(buffer),0) == -1)){
+            
+        }else if(status == IN_GAME && (FD_ISSET(0, &auxFds))){
 
-				perror("CLIENT ERROR. Function send().");
-				exit(EXIT_FAILURE);
+            bzero(buffer, sizeof(buffer));
 
-			}
+            if (!fgets(buffer, sizeof(buffer), stdin)) return;
+
+            clearStr(buffer);
+
+            if(strcmp(buffer, "HIT") == 0 || strcmp(buffer, "STAND") == 0){
+
+                printf("[CLIENT]: Enviando comando de juego: %s\n", buffer);
+                
+                if((send(sd, buffer, sizeof(buffer),0) == -1)){
+                    perror("CLIENT ERROR. Function send().");
+                    exit(EXIT_FAILURE);
+                }
+            }
         }
     }
 }

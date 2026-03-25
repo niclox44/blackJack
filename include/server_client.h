@@ -24,9 +24,23 @@
 typedef struct {
     int socket;
     char name[100];
-    int state;
+    int state; // NOT_AUTHENTICATED, AUTHENTICATED, WAITING_FOR_GAME, IN_GAME
     int points;
-    int cards[5][5]; 
+    int cards[5][5]; // [][0]=suit, [][1]=rank
     int card_count;
 } Player;
+
+typedef struct {
+    int id;
+    Player* _player[2]; // Puntero a los jugadores que participan en la partida
+    int deck[51];
+} GameSession;
+
+enum suits {
+    HEARTS,
+    DIAMONDS,
+    CLUBS,
+    SPADES
+};
+
 
