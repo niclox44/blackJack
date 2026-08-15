@@ -11,10 +11,10 @@ The final goal is to build a fully functional and expandable Blackjack game.
 
 ▶️ How to Run
 
-1. Clone the repository: git clone https://github.com/yourusername/blackjack.git
-2. Compile: make 
-3. Run the server: ./server.exe
-4. If you want to play you will need execute two clients at least: /client.exe
+1. Clone the repository: git clone https://github.com/niclox44/blackjack.git
+3. Compile: make 
+4. Run the server: ./server.exe
+5. If you want to play you will need execute two clients at least: /client.exe
 
 📌 Final Goal
 
