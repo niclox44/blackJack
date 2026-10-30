@@ -3,8 +3,6 @@
 This repository contains the development of a Blackjack game implemented in C (or whichever language you are using).
 The project is not finished yet, but it already includes part of the core logic and the main structure of the game.
 
-🚧 Project Status
-
 
 ▶️ How to Run
 
